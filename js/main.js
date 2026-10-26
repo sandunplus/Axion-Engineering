@@ -24,12 +24,37 @@
     nav.querySelectorAll("a").forEach(function (link) {
       link.addEventListener("click", function () {
         setNav(false);
+        if (drop) {
+          drop.classList.remove("is-open");
+          if (dropBtn) dropBtn.setAttribute("aria-expanded", "false");
+        }
       });
     });
   }
 
+  var drop = document.querySelector("[data-drop]");
+  var dropBtn = drop ? drop.querySelector(".nav-drop-btn") : null;
+
+  if (drop && dropBtn) {
+    dropBtn.addEventListener("click", function () {
+      var open = drop.classList.toggle("is-open");
+      dropBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+    document.addEventListener("click", function (event) {
+      if (!drop.contains(event.target)) {
+        drop.classList.remove("is-open");
+        dropBtn.setAttribute("aria-expanded", "false");
+      }
+    });
+  }
+
   document.addEventListener("keydown", function (event) {
-    if (event.key === "Escape") setNav(false);
+    if (event.key !== "Escape") return;
+    setNav(false);
+    if (drop && dropBtn) {
+      drop.classList.remove("is-open");
+      dropBtn.setAttribute("aria-expanded", "false");
+    }
   });
 
   function onScroll() {
@@ -42,80 +67,58 @@
 
   var reveals = document.querySelectorAll(".reveal");
   if ("IntersectionObserver" in window && reveals.length) {
+    function playReveal(el) {
+      var token = (el._revealToken || 0) + 1;
+      el._revealToken = token;
+      el.classList.remove("is-visible");
+      void el.offsetWidth;
+      window.requestAnimationFrame(function () {
+        window.requestAnimationFrame(function () {
+          if (el._revealToken !== token || !el._inView) return;
+          el.classList.add("is-visible");
+        });
+      });
+    }
+
     var observer = new IntersectionObserver(
       function (entries) {
         entries.forEach(function (entry) {
-          if (!entry.isIntersecting) return;
-          entry.target.classList.add("is-visible");
-          observer.unobserve(entry.target);
+          var el = entry.target;
+          el._inView = entry.isIntersecting;
+          if (!entry.isIntersecting) {
+            el._revealToken = (el._revealToken || 0) + 1;
+            el.classList.remove("is-visible");
+            return;
+          }
+          var img = el._revealImg;
+          if (img && !img.complete) return;
+          if (el.classList.contains("is-visible")) return;
+          playReveal(el);
         });
       },
-      { threshold: 0.16, rootMargin: "0px 0px -8% 0px" }
+      { threshold: 0.22, rootMargin: "0px 0px -10% 0px" }
     );
+
     reveals.forEach(function (el) {
+      var img = null;
+      if (el.classList.contains("reveal-image")) {
+        img = el.querySelector("img:not([aria-hidden='true'])");
+      }
+      el._revealImg = img;
+      if (img && !img.complete) {
+        img.addEventListener(
+          "load",
+          function () {
+            if (el._inView) playReveal(el);
+          },
+          { once: true }
+        );
+      }
       observer.observe(el);
     });
   } else {
     reveals.forEach(function (el) {
       el.classList.add("is-visible");
-    });
-  }
-
-  var filters = document.querySelectorAll("[data-filter]");
-  var projects = document.querySelectorAll("[data-category]");
-  var count = document.querySelector("[data-count]");
-  var empty = document.querySelector("[data-empty]");
-
-  function applyFilter(name) {
-    var visible = 0;
-    projects.forEach(function (project) {
-      var show = name === "all" || project.dataset.category === name;
-      project.hidden = !show;
-      if (show) visible += 1;
-    });
-    if (count) {
-      count.textContent = visible === 1 ? "1 project" : visible + " projects";
-    }
-    if (empty) empty.hidden = visible !== 0;
-  }
-
-  filters.forEach(function (button) {
-    button.addEventListener("click", function () {
-      filters.forEach(function (item) {
-        item.setAttribute("aria-pressed", "false");
-      });
-      button.setAttribute("aria-pressed", "true");
-      applyFilter(button.dataset.filter || "all");
-    });
-  });
-
-  var dialog = document.querySelector("[data-dialog]");
-  var dialogTitle = document.querySelector("[data-dialog-title]");
-  var dialogKicker = document.querySelector("[data-dialog-kicker]");
-  var dialogSummary = document.querySelector("[data-dialog-summary]");
-  var dialogScope = document.querySelector("[data-dialog-scope]");
-
-  projects.forEach(function (project) {
-    project.addEventListener("click", function () {
-      if (!dialog || typeof dialog.showModal !== "function") return;
-      dialogTitle.textContent = project.dataset.title || "";
-      dialogKicker.textContent = project.dataset.kicker || "";
-      dialogSummary.textContent = project.dataset.summary || "";
-      dialogScope.textContent = project.dataset.scope || "";
-      dialog.showModal();
-    });
-  });
-
-  if (dialog) {
-    dialog.addEventListener("click", function (event) {
-      if (event.target === dialog) dialog.close();
-    });
-  }
-
-  var closeDialog = document.querySelector("[data-dialog-close]");
-  if (closeDialog && dialog) {
-    closeDialog.addEventListener("click", function () {
-      dialog.close();
     });
   }
 
@@ -133,6 +136,7 @@
       var organization = String(data.get("organization") || "").trim();
       var interest = String(data.get("interest") || "").trim();
       var message = String(data.get("message") || "").trim();
+      var office = String(data.get("office") || "sajith@axioneng.com").trim();
       var subject = "Project inquiry from " + name;
       var body = [
         "Name: " + name,
@@ -145,14 +149,65 @@
 
       if (status) {
         status.textContent =
-          "Your email app should open with this inquiry. If it does not, write to hello@axion.engineering.";
+          "Your email app should open with this inquiry. If it does not, write to " + office + ".";
       }
 
       window.location.href =
-        "mailto:hello@axion.engineering?subject=" +
+        "mailto:" +
+        encodeURIComponent(office) +
+        "?subject=" +
         encodeURIComponent(subject) +
         "&body=" +
         encodeURIComponent(body);
+    });
+  }
+
+  var hero = document.querySelector(".hero");
+  var plate = document.querySelector(".hero-tilt");
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var finePointer = window.matchMedia("(pointer: fine)").matches;
+
+  if (hero && plate && !reduceMotion && finePointer) {
+    var targetX = 0;
+    var targetY = 0;
+    var currentX = 0;
+    var currentY = 0;
+    var frameId = 0;
+
+    function paintCube() {
+      currentX += (targetX - currentX) * 0.08;
+      currentY += (targetY - currentY) * 0.08;
+      var rotateY = currentX * 9;
+      var rotateX = currentY * -7;
+      plate.style.transform =
+        "rotateX(" +
+        rotateX.toFixed(2) +
+        "deg) rotateY(" +
+        rotateY.toFixed(2) +
+        "deg) translate3d(" +
+        (currentX * 14).toFixed(1) +
+        "px, " +
+        (currentY * 10).toFixed(1) +
+        "px, 0)";
+      if (Math.abs(targetX - currentX) > 0.004 || Math.abs(targetY - currentY) > 0.004) {
+        frameId = window.requestAnimationFrame(paintCube);
+      } else {
+        frameId = 0;
+      }
+    }
+
+    function aim(event) {
+      var rect = hero.getBoundingClientRect();
+      targetX = (event.clientX - rect.left) / rect.width - 0.5;
+      targetY = (event.clientY - rect.top) / rect.height - 0.5;
+      if (!frameId) frameId = window.requestAnimationFrame(paintCube);
+    }
+
+    hero.addEventListener("pointermove", aim);
+    hero.addEventListener("pointerleave", function () {
+      targetX = 0;
+      targetY = 0;
+      if (!frameId) frameId = window.requestAnimationFrame(paintCube);
     });
   }
 })();
