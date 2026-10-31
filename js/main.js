@@ -122,10 +122,60 @@
     });
   }
 
+  var picker = document.querySelector("[data-office-picker]");
+  if (picker) {
+    var trigger = picker.querySelector(".office-trigger");
+    var menu = picker.querySelector(".office-menu");
+    var label = picker.querySelector("[data-office-label]");
+    var valueInput = picker.querySelector("input[name='office']");
+    var options = menu.querySelectorAll("[role='option']");
+
+    function setMenu(open) {
+      menu.hidden = !open;
+      trigger.setAttribute("aria-expanded", open ? "true" : "false");
+    }
+
+    function choose(option) {
+      options.forEach(function (item) {
+        item.setAttribute("aria-selected", item === option ? "true" : "false");
+      });
+      valueInput.value = option.getAttribute("data-value") || "";
+      label.textContent = option.textContent.trim();
+      setMenu(false);
+      trigger.focus();
+    }
+
+    trigger.addEventListener("click", function () {
+      setMenu(menu.hidden);
+    });
+
+    options.forEach(function (option) {
+      option.addEventListener("click", function () {
+        choose(option);
+      });
+    });
+
+    document.addEventListener("click", function (event) {
+      if (!picker.contains(event.target)) setMenu(false);
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") setMenu(false);
+    });
+  }
+
   var form = document.querySelector("[data-form]");
   var status = document.querySelector("[data-form-status]");
 
+  var offices = {
+    "info@axioneng.com.au": true,
+    "sajig@axioneng.com.au": true,
+    "sandung@axioneng.com.au": true,
+  };
+
   if (form) {
+    var submitButton = form.querySelector("[type='submit']");
+
     form.addEventListener("submit", function (event) {
       event.preventDefault();
       if (!form.reportValidity()) return;
@@ -133,32 +183,69 @@
       var data = new FormData(form);
       var name = String(data.get("name") || "").trim();
       var email = String(data.get("email") || "").trim();
+      var mobile = String(data.get("mobile") || "").trim();
       var organization = String(data.get("organization") || "").trim();
-      var interest = String(data.get("interest") || "").trim();
       var message = String(data.get("message") || "").trim();
-      var office = String(data.get("office") || "sajith@axioneng.com").trim();
-      var subject = "Project inquiry from " + name;
-      var body = [
-        "Name: " + name,
-        "Email: " + email,
-        "Organization: " + (organization || "—"),
-        "Interest: " + interest,
-        "",
-        message,
-      ].join("\n");
+      var office = String(data.get("office") || "info@axioneng.com.au").trim();
 
-      if (status) {
-        status.textContent =
-          "Your email app should open with this inquiry. If it does not, write to " + office + ".";
+      if (!offices[office]) {
+        if (status) status.textContent = "Choose one of the Axion email addresses.";
+        return;
       }
 
-      window.location.href =
-        "mailto:" +
-        encodeURIComponent(office) +
-        "?subject=" +
-        encodeURIComponent(subject) +
-        "&body=" +
-        encodeURIComponent(body);
+      if (submitButton) submitButton.disabled = true;
+      if (status) status.textContent = "Sending…";
+
+      fetch("https://formsubmit.co/ajax/" + encodeURIComponent(office), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          Name: name,
+          Email: email,
+          "Mobile no": mobile || "—",
+          Organization: organization || "—",
+          Message: message,
+          _subject: "Project inquiry from " + name,
+          _replyto: email,
+          _template: "table",
+          _captcha: "false",
+        }),
+      })
+        .then(function (response) {
+          return response.json().then(function (payload) {
+            return { ok: response.ok, payload: payload || {} };
+          });
+        })
+        .then(function (result) {
+          var sent = String(result.payload.success) === "true" || result.payload.success === true;
+          if (!result.ok || !sent) {
+            throw new Error(result.payload.message || "The message could not be sent.");
+          }
+          form.reset();
+          if (picker && label && options && valueInput) {
+            options.forEach(function (item) {
+              var match = item.getAttribute("data-value") === valueInput.value;
+              item.setAttribute("aria-selected", match ? "true" : "false");
+              if (match) label.textContent = item.textContent.trim();
+            });
+          }
+          if (status) status.textContent = "Sent. The inquiry is on its way to " + office + ".";
+        })
+        .catch(function (error) {
+          var raw = error && error.message ? error.message : "The message could not be sent.";
+          if (status) {
+            status.textContent = /activ/i.test(raw)
+              ? office +
+                " still needs a one-time confirmation from FormSubmit. Open the activation email in that inbox, confirm it, then send this inquiry again."
+              : raw + " You can also write directly to " + office + ".";
+          }
+        })
+        .then(function () {
+          if (submitButton) submitButton.disabled = false;
+        });
     });
   }
 

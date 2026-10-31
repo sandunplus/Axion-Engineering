@@ -16,7 +16,7 @@
       href="https://fonts.googleapis.com/css2?family=Anta&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/styles.css?v=socialring" />
+    <link rel="stylesheet" href="css/styles.css?v=header-mobile" />
     <script>
       document.documentElement.classList.add("js");
     </script>
@@ -410,28 +410,31 @@
             <h2 id="contact-title" class="reveal">Tell us what needs developing.</h2>
             <p class="lede reveal">
               Share a requirement, a drawing, or the files you already have. Call either office, or
-              use the form to open your email app with the message ready to send.
+              send the form and it will arrive in the inbox you choose.
             </p>
             <ul class="contact-offices reveal">
+              <li>
+                <p class="contact-place">General</p>
+                <p><span>Email</span> <a href="mailto:info@axioneng.com.au">info@axioneng.com.au</a></p>
+              </li>
               <li class="contact-au">
                 <div class="contact-au-copy">
                   <p class="contact-place">Australia</p>
                   <p><span>Tel</span> <a href="tel:+61466630586">+61 466 630 586</a></p>
-                  <p><span>Email</span> <a href="mailto:sajith@axioneng.com">sajith@axioneng.com</a></p>
+                  <p><span>Email</span> <a href="mailto:sajig@axioneng.com.au">sajig@axioneng.com.au</a></p>
                   <p class="contact-address">
                     <span>Address</span>
-                    <a href="https://www.google.com/maps/search/?api=1&amp;query=1+Godfrey+Crescent,+Dandenong+VIC+3175,+Australia">
-                      No.1,<br />
-                      Godfrey Crescent,<br />
-                      Dandenong VIC 3175,<br />
+                    <a href="https://www.google.com/maps/search/?api=1&amp;query=7+Sheba+Court,+Hallam+VIC+3803,+Australia">
+                      7 Sheba Court,<br />
+                      Hallam VIC 3803,<br />
                       Australia.
                     </a>
                   </p>
                 </div>
                 <figure class="contact-map">
                   <iframe
-                    title="Map of No.1 Godfrey Crescent, Dandenong VIC 3175, Australia"
-                    src="https://maps.google.com/maps?q=1%20Godfrey%20Crescent%2C%20Dandenong%20VIC%203175%2C%20Australia&amp;ll=-37.9738131,145.2136442&amp;z=16&amp;output=embed"
+                    title="Map of 7 Sheba Court, Hallam VIC 3803, Australia"
+                    src="https://maps.google.com/maps?q=7%20Sheba%20Court%2C%20Hallam%20VIC%203803%2C%20Australia&amp;z=16&amp;output=embed"
                     loading="lazy"
                     referrerpolicy="no-referrer-when-downgrade"
                   ></iframe>
@@ -440,7 +443,7 @@
               <li>
                 <p class="contact-place">Sri Lanka</p>
                 <p><span>Tel</span> <a href="tel:+94772882366">+94 77 288 2366</a></p>
-                <p><span>Email</span> <a href="mailto:sandun@axioneng.com">sandun@axioneng.com</a></p>
+                <p><span>Email</span> <a href="mailto:sandung@axioneng.com.au">sandung@axioneng.com.au</a></p>
               </li>
             </ul>
           </div>
@@ -462,24 +465,37 @@
                 <input name="organization" type="text" autocomplete="organization" />
               </label>
               <label class="field">
-                <span>Interest</span>
-                <select name="interest">
-                  <option>Mechanical design &amp; equipment</option>
-                  <option>3D CAD modelling &amp; assemblies</option>
-                  <option>Manufacturing &amp; fabrication drawings</option>
-                  <option>Design modifications &amp; reverse engineering</option>
-                  <option>Drafting &amp; project support</option>
-                  <option>Not sure yet</option>
-                </select>
+                <span>Mobile no</span>
+                <input name="mobile" type="tel" autocomplete="tel" inputmode="tel" />
               </label>
             </div>
-            <label class="field">
-              <span>Send to</span>
-              <select name="office">
-                <option value="sajith@axioneng.com">Australia — sajith@axioneng.com</option>
-                <option value="sandun@axioneng.com">Sri Lanka — sandun@axioneng.com</option>
-              </select>
-            </label>
+            <div class="field">
+              <span id="send-to-label">Send to</span>
+              <div class="office-picker" data-office-picker>
+                <input type="hidden" name="office" value="info@axioneng.com.au" />
+                <button
+                  class="office-trigger"
+                  type="button"
+                  aria-labelledby="send-to-label"
+                  aria-haspopup="listbox"
+                  aria-expanded="false"
+                  aria-controls="office-list"
+                >
+                  <span data-office-label>General — info@axioneng.com.au</span>
+                </button>
+                <ul class="office-menu" id="office-list" role="listbox" aria-labelledby="send-to-label" hidden>
+                  <li role="option" tabindex="-1" data-value="info@axioneng.com.au" aria-selected="true">
+                    General — info@axioneng.com.au
+                  </li>
+                  <li role="option" tabindex="-1" data-value="sajig@axioneng.com.au" aria-selected="false">
+                    Australia — sajig@axioneng.com.au
+                  </li>
+                  <li role="option" tabindex="-1" data-value="sandung@axioneng.com.au" aria-selected="false">
+                    Sri Lanka — sandung@axioneng.com.au
+                  </li>
+                </ul>
+              </div>
+            </div>
             <label class="field">
               <span>About the project</span>
               <textarea name="message" required></textarea>
@@ -504,13 +520,14 @@
             <a href="#process">Process</a>
             <a href="#studio">Studio</a>
             <a href="#contact">Contact</a>
-            <a href="mailto:sajith@axioneng.com">sajith@axioneng.com</a>
-            <a href="mailto:sandun@axioneng.com">sandun@axioneng.com</a>
+            <a href="mailto:info@axioneng.com.au">info@axioneng.com.au</a>
+            <a href="mailto:sajig@axioneng.com.au">sajig@axioneng.com.au</a>
+            <a href="mailto:sandung@axioneng.com.au">sandung@axioneng.com.au</a>
           </nav>
         </div>
       </div>
     </footer>
 
-    <script src="js/main.js?v=contact"></script>
+    <script src="js/main.js?v=contact-6"></script>
   </body>
 </html>
